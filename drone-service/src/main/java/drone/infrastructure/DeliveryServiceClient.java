@@ -39,8 +39,10 @@ public class DeliveryServiceClient {
         body.put("assignedAt", System.currentTimeMillis());
 
         client.putAbs(deliveryServiceUrl + "/shipments/" + shipmentId + "/assignment").putHeader("Content-Type", "application/json").sendBuffer(Buffer.buffer(body.toString())) //invia il messaggio http trattando il body con un buffer (richiesto da vertx per recuperare i messaggi)
-                .onSuccess(res -> log.info("Drone {} assigned to shipment {}", drone.getId(), shipmentId)) //in caso di successo
-                .onFailure(err -> log.error("Failed to notify delivery service for shipment {}", shipmentId, err)); //in caso di fallimento
+                .onSuccess(res -> { //in caso di successo
+                    log.info("Drone {} assigned to shipment {}", drone.getId(), shipmentId);
+                    log.info("Shipment {} drone assigned notified", shipmentId);
+                }).onFailure(err -> log.error("Failed to notify delivery service for shipment {}", shipmentId, err)); //in caso di fallimento
     }
 
     //invia il messaggio di drone non disponibile
@@ -51,7 +53,9 @@ public class DeliveryServiceClient {
         body.put("assigned", false);
 
         client.putAbs(deliveryServiceUrl + "/shipments/" + shipmentId + "/assignment").sendBuffer(Buffer.buffer(body.toString())) //invia il messaggio http trattando il body con un buffer (richiesto da vertx per recuperare i messaggi
-                .onSuccess(res -> log.warn("No available drones for shipment {}", shipmentId)) //in caso di successo
-                .onFailure(err -> log.error("Failed to notify delivery service for shipment {}", shipmentId, err)); //in caso di fallimento
+                .onSuccess(res -> { //in caso di successo
+                    log.warn("No available drones for shipment {}", shipmentId);
+                    log.warn("Shipment {} drone not available notified", shipmentId);
+                }).onFailure(err -> log.error("Failed to notify delivery service for shipment {}", shipmentId, err)); //in caso di fallimento
     }
 }

@@ -35,6 +35,7 @@ public class DroneAssignment {
     private void assignDroneToShipment(RoutingContext ctx) {
         JSONObject body = new JSONObject(ctx.body().asString()); //recupera il body dal messaggio
         String shipmentId = body.getString("shipmentId");
+        log.info("Shipment {} request received", shipmentId);
         double pickupLatitude = body.getDouble("pickupLatitude");
         double pickupLongitude = body.getDouble("pickupLongitude");
         double deliveryLatitude = body.getDouble("deliveryLatitude");

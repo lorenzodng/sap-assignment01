@@ -40,6 +40,8 @@ public class DroneServiceClient {
         body.put("packageWeight", shipment.getPackage().getWeight());
         body.put("deliveryTimeLimit", shipment.getDeliveryTimeLimit());
 
-        return client.postAbs(droneServiceUrl + "/shipments/assign").putHeader("Content-Type", "application/json").sendBuffer(Buffer.buffer(body.toString()));
+        return client.postAbs(droneServiceUrl + "/shipments/assign").putHeader("Content-Type", "application/json").sendBuffer(Buffer.buffer(body.toString()))
+                .onSuccess(res -> log.info("Shipment {} request notified", shipment.getId()))
+                .onFailure(err -> log.error("Failed to notify drone service for shipment {}", shipment.getId(), err));
     }
 }

@@ -34,6 +34,7 @@ public class ShipmentAssignment {
         boolean assigned = body.getBoolean("assigned"); //recupera il contenuto
 
         if (assigned) { //se è true
+            log.info("Shipment {} drone assigned received", shipmentId);
             Position droneInitialPosition = new Position(body.getDouble("droneLatitude"), body.getDouble("droneLongitude"));
             Position pickupPosition = new Position(body.getDouble("pickupLatitude"), body.getDouble("pickupLongitude"));
             Position deliveryPosition = new Position(body.getDouble("deliveryLatitude"), body.getDouble("deliveryLongitude"));
@@ -44,6 +45,7 @@ public class ShipmentAssignment {
             log.info("Shipment {} scheduled", shipmentId);
             ctx.response().setStatusCode(200).end();
         } else { //se è false
+            log.info("Shipment {} drone not available received", shipmentId);
             Shipment shipment = new Shipment(shipmentId); //crea la spedizione con stato "cancelled"
             shipments.put(shipmentId, shipment); //aggiunge la spedizione alla mappa
             log.info("Shipment {} cancelled", shipmentId);

@@ -1,6 +1,6 @@
 # Shipping on the Air - Living Document
 
-**v1.3.3**
+**v1.3.4**
 
 ---
 
@@ -294,18 +294,21 @@ The non-functional requirements are satisfied by the following architectural cho
 
 ##### Interaction Model
 
-All interactions are synchronous, following a pipeline pattern in which each request is handled sequentially by multiple microservices.
+All interactions follow a non-blocking request/response pattern in which each request is propagated through multiple microservices without suspending threads:
 
-- **Client → API Gateway**: the client expects an immediate response.
-- **API Gateway → Microservices**: the API Gateway waits for the response to return it to the client.
-- **Microservices → Microservices**: in some cases, a microservice may require data produced by another service to complete the request.
+- **Client → API Gateway**: the client sends a request and waits for the response.
+- **API Gateway → Microservices**: the API Gateway forwards the request asynchronously and returns the response to the client once received.
+- **Microservices → Microservices**: some microservices may contact other services asynchronously before completing the response to the caller.
+
+This approach allows the system to handle many simultaneous requests efficiently, avoiding thread exhaustion and improving scalability.
 
 ##### Execution Model
 
-Each microservice adopts an asynchronous **event-loop** execution model, using a pool of event-loop threads to handle many concurrent requests efficiently. Although interactions are synchronous at the communication level, each microservice processes requests in a non-blocking way.  
-This model was chosen to satisfy the scalability requirement, allowing each microservice to handle multiple simultaneous deliveries without blocking threads on I/O operations.
+Each microservice adopts an asynchronous event-loop execution model, using a pool of event-loop threads to handle multiple concurrent requests efficiently. Although interactions appear synchronous from the client perspective, each microservice processes requests in a non-blocking way, delegating I/O operations to the event loop.
+
+This model was chosen to satisfy the scalability requirement, allowing each microservice to handle multiple simultaneous deliveries without blocking threads on I/O operations, thus improving throughput and responsiveness under high load.
 
 #### 2.4.2 Technical Design
 
-- **Interaction**: REST (RPI) is chosen to implement synchronous communication between microservices.
+- **Interaction**: REST is chosen as the communication protocol between microservices, implemented in a non-blocking way.
 - **Execution**: Vert.x is chosen to implement the asynchronous event-loop execution.

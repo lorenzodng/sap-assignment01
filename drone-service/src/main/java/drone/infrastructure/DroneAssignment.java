@@ -46,11 +46,17 @@ public class DroneAssignment {
         Drone assignedDrone = assignDrone.assign(drones, packageWeight, pickupLatitude, pickupLongitude, distancePickupToDelivery, deliveryTimeLimit);
         if (assignedDrone != null) {
             assignedDrone.setAvailable(false);
-            deliveryServiceClient.notifyDroneAssigned(shipmentId, assignedDrone, pickupLatitude, pickupLongitude, deliveryLatitude, deliveryLongitude);
-            ctx.response().setStatusCode(201).end();
+            deliveryServiceClient.notifyDroneAssigned(shipmentId, assignedDrone, pickupLatitude, pickupLongitude, deliveryLatitude, deliveryLongitude).onSuccess(response -> {
+                ctx.response().setStatusCode(response.statusCode()).end();
+            }).onFailure(err -> {
+                ctx.response().setStatusCode(500).end("Error contacting drone service");
+            });
         } else {
-            deliveryServiceClient.notifyDroneNotAvailable(shipmentId);
-            ctx.response().setStatusCode(503).end("No drone available");
+            deliveryServiceClient.notifyDroneNotAvailable(shipmentId).onSuccess(res -> {
+                ctx.response().setStatusCode(503).end("No drone available");
+            }).onFailure(err -> {
+                ctx.response().setStatusCode(500).end("Error contacting delivery service");
+            });
         }
     }
 

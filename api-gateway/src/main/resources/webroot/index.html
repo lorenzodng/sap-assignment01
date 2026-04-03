@@ -1,0 +1,254 @@
+<script>
+    const BASE = 'http://localhost:8080';
+    const ids = ['userName', 'userSurname', 'pickupAddress', 'pickupDate', 'pickupTime', 'deliveryAddress', 'deliveryTimeLimit', 'weight', 'fragile'];
+
+    function validate() {
+        const ok = ids.every(id => document.getElementById(id).value.trim() !== '');
+        document.getElementById('submitBtn').disabled = !ok;
+    }
+
+    async function geocode(address) {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+        const data = await res.json();
+        if (!data.length) throw new Error('Indirizzo non trovato: ' + address);
+        return {latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon)};
+    }
+
+    async function submitForm() {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Invio in corso...';
+        const el = document.getElementById('formMsg');
+        try {
+            const [pickup, delivery] = await Promise.all([
+                geocode(v('pickupAddress')),
+                geocode(v('deliveryAddress'))
+            ]);
+            const body = {
+                userId: crypto.randomUUID(),
+                userName: v('userName'),
+                userSurname: v('userSurname'),
+                pickupDate: v('pickupDate'),
+                pickupTime: v('pickupTime'),
+                deliveryTimeLimit: parseInt(v('deliveryTimeLimit')),
+                pickupLocation: pickup,
+                deliveryLocation: delivery,
+                package: {weight: parseFloat(v('weight')), fragile: v('fragile') === 'true'}
+            };
+            const res = await fetch(BASE + '/shipments', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+            const text = await res.text();
+            if (res.status === 201) {
+                el.innerHTML = `<div class="msg msg-success">Spedizione creata — ID: ${text}</div>`;
+            } else {
+                el.innerHTML = `<div class="msg msg-error">Nessun drone disponibile (${res.status})</div>`;
+                btn.disabled = false;
+                btn.textContent = 'Crea spedizione';
+            }
+        } catch (e) {
+            el.innerHTML = `<div class="msg msg-error">${e.message.includes('Indirizzo') ? e.message : 'Errore di connessione — verifica che i servizi siano avviati'}</div>`;
+            btn.disabled = false;
+            btn.textContent = 'Crea spedizione';
+        }
+    }
+
+    function v(id) {
+        return document.getElementById(id).value.trim();
+    }
+
+    document.getElementById('pickupDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('pickupTime').value = '10:00';
+</script>
+
+<div class="wrapper">
+    <p class="page-title">Nuova spedizione</p>
+    <p class="page-sub">Compila tutti i campi per richiedere un drone</p>
+
+    <div class="form-card">
+        <div class="section-label">Mittente</div>
+        <div class="fields">
+            <div class="field"><label>Nome</label><input id="userName" placeholder="Mario" oninput="validate()"/></div>
+            <div class="field"><label>Cognome</label><input id="userSurname" placeholder="Rossi" oninput="validate()"/>
+            </div>
+        </div>
+
+        <div class="section-label section-gap">Ritiro</div>
+        <div class="fields">
+            <div class="field full"><label>Indirizzo di ritiro</label><input id="pickupAddress"
+                                                                             placeholder="Via Roma 1, Roma"
+                                                                             oninput="validate()"/></div>
+            <div class="field"><label>Data</label><input id="pickupDate" type="date" oninput="validate()"/></div>
+            <div class="field"><label>Ora</label><input id="pickupTime" type="time" oninput="validate()"/></div>
+        </div>
+
+        <div class="section-label section-gap">Consegna</div>
+        <div class="fields">
+            <div class="field full"><label>Indirizzo di consegna</label><input id="deliveryAddress"
+                                                                               placeholder="Piazza Venezia, Roma"
+                                                                               oninput="validate()"/></div>
+            <div class="field full"><label>Limite consegna (minuti)</label><input id="deliveryTimeLimit" type="number"
+                                                                                  placeholder="60" min="1"
+                                                                                  oninput="validate()"/></div>
+        </div>
+
+        <div class="section-label section-gap">Pacco</div>
+        <div class="fields">
+            <div class="field"><label>Peso (kg)</label><input id="weight" type="number" placeholder="1.5" step="0.1"
+                                                              min="0.1" oninput="validate()"/></div>
+            <div class="field"><label>Fragile</label>
+                <select id="fragile" onchange="validate()">
+                    <option value="">Seleziona</option>
+                    <option value="false">No</option>
+                    <option value="true">Sì</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" disabled onclick="submitForm()">Crea spedizione</button>
+        <div id="formMsg"></div>
+    </div>
+</div>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0
+    }
+
+    body {
+        font-family: system-ui, sans-serif;
+        background: #f5f5f5;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem
+    }
+
+    .wrapper {
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 2rem 0
+    }
+
+    .page-title {
+        font-size: 22px;
+        font-weight: 500;
+        color: #1a1a1a;
+        text-align: center;
+        margin-bottom: 6px
+    }
+
+    .page-sub {
+        font-size: 14px;
+        color: #666666;
+        text-align: center;
+        margin-bottom: 2rem
+    }
+
+    .form-card {
+        background: #ffffff;
+        border: 0.5px solid #e5e5e5;
+        border-radius: 12px;
+        padding: 1.75rem
+    }
+
+    .section-label {
+        font-size: 11px;
+        font-weight: 500;
+        color: #999999;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        margin-bottom: 1rem;
+        padding-bottom: 8px;
+        border-bottom: 0.5px solid #e5e5e5
+    }
+
+    .fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 1.5rem
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px
+    }
+
+    .field.full {
+        grid-column: 1/-1
+    }
+
+    .field label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #1a1a1a
+    }
+
+    .field input, .field select {
+        font-size: 14px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 0.5px solid #d4d4d4;
+        background: #ffffff;
+        color: #1a1a1a;
+        transition: border-color .15s, box-shadow .15s;
+        width: 100%
+    }
+
+    .field input:focus, .field select:focus {
+        outline: none;
+        border-color: #378ADD;
+        box-shadow: 0 0 0 3px rgba(55, 138, 221, .15)
+    }
+
+    .section-gap {
+        margin-bottom: 1.5rem
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: background .15s, opacity .15s;
+        background: #378ADD;
+        color: #E6F1FB
+    }
+
+    .submit-btn:disabled {
+        opacity: .45;
+        cursor: not-allowed
+    }
+
+    .submit-btn:not(:disabled):hover {
+        background: #185FA5
+    }
+
+    .msg {
+        font-size: 13px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-top: 1rem
+    }
+
+    .msg-success {
+        background: #eaf3de;
+        color: #3b6d11
+    }
+
+    .msg-error {
+        background: #fcebeb;
+        color: #a32d2d
+    }
+</style>

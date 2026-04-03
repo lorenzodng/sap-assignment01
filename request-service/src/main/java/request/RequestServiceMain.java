@@ -19,6 +19,7 @@ public class RequestServiceMain {
         String droneServiceUrl = dotenv.get("DRONE_SERVICE_URL");
         int port = Integer.parseInt(dotenv.get("PORT"));
 
+        //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
         //crea i use case

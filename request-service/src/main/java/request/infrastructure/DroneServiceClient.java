@@ -25,9 +25,8 @@ public class DroneServiceClient {
     }
 
     /*
-    invia il messaggio di richiesta di spedizione creata e attende la risposta prima di proseguire:
-    1) l'utente invoca l'api-gateway che contatta request-service
-    2) request-service aspetta la risposta di stato da drone-service per sapere cosa rispondere all'api-gateway (con "createShipment")
+    1) l'utente invoca l'api-gateway che contatta request-service (in ShipmentRequestController)
+    2) request-service aspetta la risposta di stato da drone-service per sapere cosa rispondere all'api-gateway (con "createShipment" in ShipmentRequestController)
     3) l'api-gateway mostra il messaggio all'utente
      */
     public Future<HttpResponse<Buffer>> notifyShipmentRequest(Shipment shipment) {

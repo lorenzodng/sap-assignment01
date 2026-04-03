@@ -19,6 +19,7 @@ public class DeliveryServiceMain {
         Dotenv dotenv = Dotenv.configure().directory("delivery-service").load(); //carica le variabili del file .env
         int port = Integer.parseInt(dotenv.get("PORT"));
 
+        //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
         //crea i consumer Kafka

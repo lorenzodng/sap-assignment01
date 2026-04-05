@@ -3,11 +3,13 @@ package delivery;
 import delivery.infrastructure.ShipmentAssignment;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import delivery.domain.Shipment;
 import delivery.infrastructure.TrackingDeliveryController;
 import java.util.HashMap;
 import java.util.Map;
+import io.vertx.ext.web.handler.CorsHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +33,7 @@ public class DeliveryServiceMain {
 
         //crea il router e registra le rotte
         Router router = Router.router(vertx);
+        router.route().handler(CorsHandler.create().addOrigin("*").allowedMethod(HttpMethod.GET).allowedMethod(HttpMethod.POST).allowedHeader("Content-Type")); //registra un handler per la lettura di richieste provenienti da fonti diverse dal server (ovvero dal frontend)
         assignmentController.registerRoutes(router);
         trackingController.registerRoutes(router);
 

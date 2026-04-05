@@ -225,7 +225,6 @@ flowchart LR
 
 The system adopts a **microservices** architectural style, decomposing the domain into independent services, each responsible for a specific bounded context:
 
-- **API Gateway**: entry point of the system, responsible for routing requests from the client to the appropriate microservice.
 - **Request Service**: implements the **Request** bounded context.
 - **Drone Service**: implements the **Drone** bounded context.
 - **Delivery Service**: implements the **Shipment** bounded context.
@@ -244,8 +243,6 @@ flowchart LR
     C([Client])
 
     subgraph System
-        AG[API Gateway]
-
         subgraph RS[Request Service]
             RS_I[Infrastructure] --> RS_A[Application] --> RS_D[Domain]
         end
@@ -259,9 +256,8 @@ flowchart LR
         end
     end
 
-    C -->|request| AG
-    AG -->|request| RS
-    AG -->|request| DLS
+    C -->|request| RS
+    C -->|request| DLS
     RS -->|request| DS
     DS -->|request| DLS
 ```
@@ -297,9 +293,10 @@ The non-functional requirements are satisfied by the following architectural cho
 
 All interactions follow a non-blocking request/response pattern in which each request is propagated through multiple microservices without suspending threads:
 
-- **Client → API Gateway**: the client sends a request and waits for the response.
-- **API Gateway → Microservices**: the API Gateway forwards the request asynchronously and returns the response to the client once received.
-- **Microservices → Microservices**: some microservices may contact other services asynchronously before completing the response to the caller.
+- **Client → Request Service**: the client sends a shipment request and waits for the response.
+- **Client → Delivery Service**: the client sends tracking requests and waits for the response.
+- **Request Service → Drone Service**: once a shipment request is created, Request Service notifies Drone Service asynchronously to assign a drone.
+- **Drone Service → Delivery Service**: once a drone is assigned, Drone Service notifies Delivery Service asynchronously to start tracking the shipment.
 
 This approach allows the system to handle many simultaneous requests efficiently, avoiding thread exhaustion and improving scalability.
 

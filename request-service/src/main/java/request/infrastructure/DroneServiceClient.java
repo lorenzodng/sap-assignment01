@@ -26,8 +26,8 @@ public class DroneServiceClient {
 
     /*
     1) l'utente invoca l'api-gateway che contatta request-service (in ShipmentRequestController)
-    2) request-service aspetta la risposta di stato da drone-service per sapere cosa rispondere all'api-gateway (con "createShipment" in ShipmentRequestController)
-    3) l'api-gateway mostra il messaggio all'utente
+    2) request-service aspetta la risposta di stato da drone-service per sapere cosa rispondere all'utente (con "createShipment" in ShipmentRequestController)
+    3) request-service mostra il messaggio all'utente
      */
     public Future<HttpResponse<Buffer>> notifyShipmentRequest(Shipment shipment) {
         JSONObject body = new JSONObject();

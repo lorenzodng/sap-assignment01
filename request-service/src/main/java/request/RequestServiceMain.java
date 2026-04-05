@@ -3,6 +3,8 @@ package request;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.CorsHandler;
+import io.vertx.core.http.HttpMethod;
 import request.application.CreateShipmentRequestImpl;
 import request.application.ValidateShipmentRequestImpl;
 import request.infrastructure.DroneServiceClient;
@@ -34,6 +36,7 @@ public class RequestServiceMain {
 
         //crea il router e registra la rotta
         Router router = Router.router(vertx);
+        router.route().handler(CorsHandler.create().addOrigin("*").allowedMethod(HttpMethod.GET).allowedMethod(HttpMethod.POST).allowedHeader("Content-Type")); //registra un handler per la lettura di richieste provenienti da fonti diverse dal server (ovvero dal frontend)
         controller.registerRoutes(router);
 
         //avvia il server HTTP

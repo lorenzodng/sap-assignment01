@@ -11,13 +11,17 @@ import request.domain.Position;
 import request.domain.Shipment;
 import request.domain.User;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 //controller che riceve le richieste dal client
 @Adapter
 public class ShipmentRequestController {
 
+    private static final Logger log = LoggerFactory.getLogger(ShipmentRequestController.class);
     private final CreateShipmentRequest createShipmentRequest;
     private final ValidateShipmentRequest validateShipmentRequest;
     private final DroneServiceClient droneServiceClient;
@@ -44,11 +48,25 @@ public class ShipmentRequestController {
         Package pack = new Package(UUID.randomUUID().toString(), body.getJsonObject("package").getDouble("weight"), body.getJsonObject("package").getBoolean("fragile"));
         Shipment shipment = createShipmentRequest.create(UUID.randomUUID().toString(), user, pickupLocation, deliveryLocation, LocalDate.parse(body.getString("pickupDate")), LocalTime.parse(body.getString("pickupTime")), body.getInteger("deliveryTimeLimit"), pack);
         if (validateShipmentRequest.validate(shipment)) {  //valida la richiesta
-            droneServiceClient.notifyShipmentRequest(shipment).onSuccess(response -> {
-                ctx.response().setStatusCode(response.statusCode()).putHeader("Content-Type", "application/json").end(shipment.getId());
-            }).onFailure(err -> {
-                ctx.response().setStatusCode(500).end("Error contacting drone service");
-            });
+            log.info("Shipment {} request created", shipment.getId());
+            LocalDateTime pickupDateTime = LocalDateTime.of(shipment.getPickupDate(), shipment.getPickupTime());
+            long delayMs = java.time.Duration.between(LocalDateTime.now(), pickupDateTime).toMillis();
+
+            //il drone parte subito se la data/ora è già passata o è adesso
+            if (delayMs <= 0) {
+                droneServiceClient.notifyShipmentRequest(shipment).onSuccess(response -> {
+                    ctx.response().setStatusCode(response.statusCode()).putHeader("Content-Type", "application/json").end(shipment.getId());
+                }).onFailure(err -> {
+                    ctx.response().setStatusCode(500).end("Error contacting drone service");
+                });
+            //altrimenti attende
+            } else {
+                // risponde subito al client, ma notifica drone-service al momento giusto
+                ctx.response().setStatusCode(201).putHeader("Content-Type", "application/json").end(shipment.getId());
+                ctx.vertx().setTimer(delayMs, id -> {
+                    droneServiceClient.notifyShipmentRequest(shipment);
+                });
+            }
         } else {
             ctx.response().setStatusCode(400).end("Invalid request");
         }

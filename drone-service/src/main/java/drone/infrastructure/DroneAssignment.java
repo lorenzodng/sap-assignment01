@@ -47,7 +47,7 @@ public class DroneAssignment {
         if (assignedDrone != null) {
             assignedDrone.setAvailable(false);
             deliveryServiceClient.notifyDroneAssigned(shipmentId, assignedDrone, pickupLatitude, pickupLongitude, deliveryLatitude, deliveryLongitude).onSuccess(response -> {
-                ctx.response().setStatusCode(response.statusCode()).end();
+                ctx.response().setStatusCode(201).end();
             }).onFailure(err -> {
                 ctx.response().setStatusCode(500).end("Error contacting drone service");
             });

@@ -191,6 +191,7 @@ flowchart LR
 - **Value Objects**:
     - `Position`: represents a geographic location expressed as latitude and longitude.
 - **Invariants**:
+    - Pickup date and time must be in the future.
     - Package weight must be greater than 0.
     - Delivery time limit must be greater than 0.
     - Pickup and delivery coordinates must be valid.

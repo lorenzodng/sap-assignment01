@@ -1,7 +1,7 @@
 package drone;
 
 import drone.infrastructure.DeliveryServiceClient;
-import drone.infrastructure.DroneAssignment;
+import drone.infrastructure.DroneAssignmentController;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.vertx.core.Vertx;
 import drone.application.AssignDroneImpl;
@@ -40,11 +40,11 @@ public class DroneServiceMain {
         DeliveryServiceClient deliveryServiceClient = new DeliveryServiceClient(vertx, deliveryServiceUrl);
 
         //crea il controller
-        DroneAssignment controller = new DroneAssignment(assignDrone, drones, deliveryServiceClient);
+        DroneAssignmentController droneController = new DroneAssignmentController(assignDrone, drones, deliveryServiceClient);
 
         //crea il router e registra le rotte
         Router router = Router.router(vertx);
-        controller.registerRoutes(router);
+        droneController.registerRoutes(router);
 
         //avvia il server HTTP
         vertx.createHttpServer().requestHandler(router).listen(port);

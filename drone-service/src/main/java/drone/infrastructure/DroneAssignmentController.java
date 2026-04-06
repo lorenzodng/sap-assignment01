@@ -13,14 +13,14 @@ import java.util.List;
 
 //controller che riceve le notifiche di richiesta creata da request-service
 @Adapter
-public class DroneAssignment {
+public class DroneAssignmentController {
 
-    private static final Logger log = LoggerFactory.getLogger(DroneAssignment.class);
+    private static final Logger log = LoggerFactory.getLogger(DroneAssignmentController.class);
     private final AssignDrone assignDrone;
     private final List<Drone> drones; //lista dei droni disponibili
     private final DeliveryServiceClient deliveryServiceClient;
 
-    public DroneAssignment(AssignDrone assignDrone, List<Drone> drones, DeliveryServiceClient deliveryServiceClient) {
+    public DroneAssignmentController(AssignDrone assignDrone, List<Drone> drones, DeliveryServiceClient deliveryServiceClient) {
         this.assignDrone = assignDrone;
         this.drones = drones;
         this.deliveryServiceClient = deliveryServiceClient;

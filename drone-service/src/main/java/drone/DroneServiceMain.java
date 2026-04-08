@@ -1,11 +1,11 @@
 package drone;
 
+import drone.application.*;
 import drone.infrastructure.DeliveryServiceClient;
 import drone.infrastructure.DroneAssignmentController;
+import drone.infrastructure.InMemoryDroneRepository;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.vertx.core.Vertx;
-import drone.application.AssignDroneImpl;
-import drone.application.CheckDroneAvailabilityImpl;
 import drone.domain.Drone;
 import drone.domain.Position;
 import java.util.ArrayList;
@@ -26,21 +26,25 @@ public class DroneServiceMain {
         //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
-        //crea i use case
-        CheckDroneAvailabilityImpl checkDroneAvailability = new CheckDroneAvailabilityImpl();
-        AssignDroneImpl assignDrone = new AssignDroneImpl(checkDroneAvailability);
-
         //crea la flotta di droni (posizionati a Roma)
         List<Drone> drones = new ArrayList<>();
         drones.add(new Drone("drone-1", new Position(41.90, 12.49)));
         drones.add(new Drone("drone-2", new Position(41.91, 12.50)));
         drones.add(new Drone("drone-3", new Position(41.92, 12.51)));
 
-        //crea il client
-        DeliveryServiceClient deliveryServiceClient = new DeliveryServiceClient(vertx, deliveryServiceUrl);
+        //crea il livello infrastruttura
+        DroneRepository droneRepository = new InMemoryDroneRepository(drones);
+        DeliveryServiceNotifier deliveryNotifier = new DeliveryServiceClient(vertx, deliveryServiceUrl);
+
+        //crea i use case
+        CheckDroneAvailability checker = new CheckDroneAvailabilityImpl();
+        AssignDrone assigner = new AssignDroneImpl(checker);
+
+        //crea l'orchestratore
+        DroneAssignmentOrchestrator orchestrator = new DroneAssignmentOrchestratorImpl(assigner, deliveryNotifier, droneRepository);
 
         //crea il controller
-        DroneAssignmentController droneController = new DroneAssignmentController(assignDrone, drones, deliveryServiceClient);
+        DroneAssignmentController droneController = new DroneAssignmentController(orchestrator);
 
         //crea il router e registra le rotte
         Router router = Router.router(vertx);

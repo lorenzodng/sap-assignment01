@@ -17,25 +17,26 @@ public class RequestServiceMain {
 
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.configure().directory("request-service").load(); //carica le variabili del file .env
+
         String droneServiceUrl = dotenv.get("DRONE_SERVICE_URL");
         int port = Integer.parseInt(dotenv.get("PORT"));
 
         //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
+        //crea il producer
+        DroneServiceNotifier droneServiceNotifier = new DroneServiceClient(vertx, droneServiceUrl);
+
         //crea i use case
         CreateShipmentRequest createShipmentRequest = new CreateShipmentRequestImpl();
         ValidateShipmentRequest validateShipmentRequest = new ValidateShipmentRequestImpl();
-        ShipmentScheduler shipmentScheduler = new ShipmentSchedulerImpl();
-
-        //crea il producer
-        DroneServiceNotifier droneServiceNotifier = new DroneServiceClient(vertx, droneServiceUrl);
+        ShipmentScheduler shipmentScheduler = new ShipmentSchedulerImpl(droneServiceNotifier, vertx);
 
         //crea l'orchestratore
         ShipmentRequestOrchestrator orchestrator = new ShipmentRequestOrchestratorImpl(createShipmentRequest, validateShipmentRequest, shipmentScheduler);
 
         //crea il controller REST
-        ShipmentRequestController shipmentController = new ShipmentRequestController(orchestrator, droneServiceNotifier);
+        ShipmentRequestController shipmentController = new ShipmentRequestController(orchestrator);
 
         //crea il router e registra la rotta
         Router router = Router.router(vertx);

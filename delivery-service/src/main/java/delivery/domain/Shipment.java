@@ -1,14 +1,13 @@
 package delivery.domain;
 
 import buildingblocks.domain.AggregateRoot;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 //questo è un esempio della proprietà di modello indipendente del bounded context: Shipment di questo microservizio è diverso da Shipment del gestore richieste
 
 public class Shipment implements AggregateRoot<String> {
 
-    private static final Logger log = LoggerFactory.getLogger(Shipment.class);
+    private static final double MS_TO_HOURS = 3600000.0;
+    private static final int MINUTES_IN_HOUR = 60;
     private final String id;
     private Position droneInitialPosition;
     private Position pickupPosition;
@@ -47,18 +46,18 @@ public class Shipment implements AggregateRoot<String> {
             return null;
         }
 
-        double elapsedHours = (System.currentTimeMillis() - assignedAt) / 3600000.0; //calcolo le ore trascorse dall'assegnazione del drone
+        double elapsedHours = (System.currentTimeMillis() - assignedAt) / MS_TO_HOURS; //calcolo le ore trascorse dall'assegnazione del drone
         double distanceCovered = deliverySpeed * elapsedHours; //calcola la distanza percorsa dal drone
 
         //prima fase: drone si muove verso il luogo di ritiro
-        double distanceToPickup = calculateDistance(droneInitialPosition, pickupPosition); //calcola la distanza dalla base del drone al luogo di ritiro
+        double distanceToPickup = GeoUtils.haversine(droneInitialPosition.getLatitude(), droneInitialPosition.getLongitude(), pickupPosition.getLatitude(), pickupPosition.getLongitude()); //calcola la distanza dalla base del drone al luogo di ritiro
         if (distanceCovered < distanceToPickup) { //se la distanza percorsa è minore della distanza verso il ritiro (il drone è in viaggio)
             return interpolate(droneInitialPosition, pickupPosition, distanceCovered / distanceToPickup); //calcola la posizione
         }
 
         //seconda fase: drone si muove verso la destinazione
         double distanceCovered2 = distanceCovered - distanceToPickup; //aggiorno la distanza ignorando quella già percorsa verso il ritiro
-        double distanceToDelivery = calculateDistance(pickupPosition, deliveryPosition); //calcola la distanza dal luogo di ritiro al luogo di destinazione
+        double distanceToDelivery = GeoUtils.haversine(pickupPosition.getLatitude(), pickupPosition.getLongitude(), deliveryPosition.getLatitude(), deliveryPosition.getLongitude()); //calcola la distanza dal luogo di ritiro al luogo di destinazione
         if (distanceCovered2 < distanceToDelivery) { //se la distanza percorsa è minore della distanza verso la destinazione (il drone è in viaggio)
             return interpolate(pickupPosition, deliveryPosition, distanceCovered2 / distanceToDelivery); //calcola la posizione
         }
@@ -74,15 +73,6 @@ public class Shipment implements AggregateRoot<String> {
         return new Position(lat, lon);
     }
 
-    //calcola la distanza in km tra due posizioni
-    private double calculateDistance(Position p1, Position p2) {
-        final int R = 6371;
-        double dLat = Math.toRadians(p2.getLatitude() - p1.getLatitude());
-        double dLon = Math.toRadians(p2.getLongitude() - p1.getLongitude());
-        double haversine = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Math.toRadians(p1.getLatitude())) * Math.cos(Math.toRadians(p2.getLatitude())) * Math.sin(dLon/2) * Math.sin(dLon/2);
-        return R * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1-haversine));
-    }
-
     //calcola il tempo rimanente alla consegna
     public double calculateRemainingTime() {
 
@@ -90,11 +80,11 @@ public class Shipment implements AggregateRoot<String> {
         if (droneInitialPosition == null) {
             return 0;
         }
-        double elapsedHours = (System.currentTimeMillis() - assignedAt) / 3600000.0; //calcola le ore trascorse dall'assegnazione del drone
+        double elapsedHours = (System.currentTimeMillis() - assignedAt) / MS_TO_HOURS; //calcola le ore trascorse dall'assegnazione del drone
         double distanceCovered = deliverySpeed * elapsedHours; //calcola la distanza totale percorsa dal drone
-        double totalDistance = calculateDistance(droneInitialPosition, pickupPosition) + calculateDistance(pickupPosition, deliveryPosition); //calcola la distanza totale che il drone deve percorrere (base->ritiro + ritiro->destinazione)
+        double totalDistance = GeoUtils.haversine(droneInitialPosition.getLatitude(), droneInitialPosition.getLongitude(), pickupPosition.getLatitude(), pickupPosition.getLongitude()) + GeoUtils.haversine(pickupPosition.getLatitude(), pickupPosition.getLongitude(), deliveryPosition.getLatitude(), deliveryPosition.getLongitude()); //calcola la distanza totale che il drone deve percorrere (base->ritiro + ritiro->destinazione)
         double remainingDistance = Math.max(0, totalDistance - distanceCovered); //calcola la distanza rimanente (distanza totale - distanza già percorsa)
-        return (int) Math.ceil((remainingDistance / deliverySpeed) * 60); //converte la distanza rimanente in minuti (senza secondi), arrotondando per eccesso
+        return (int) Math.ceil((remainingDistance / deliverySpeed) * MINUTES_IN_HOUR); //converte la distanza rimanente in minuti (senza secondi), arrotondando per eccesso
     }
 
     @Override
@@ -105,10 +95,10 @@ public class Shipment implements AggregateRoot<String> {
     //restituisce lo stato in base alla posizione del drone
     public ShipmentStatus getStatus() {
         if (droneInitialPosition != null) {
-            double elapsedHours = (System.currentTimeMillis() - assignedAt) / 3600000.0; //calcola le ore trascorse dall'assegnazione del drone alla spedizione
+            double elapsedHours = (System.currentTimeMillis() - assignedAt) / MS_TO_HOURS; //calcola le ore trascorse dall'assegnazione del drone alla spedizione
             double distanceCovered = deliverySpeed * elapsedHours; //calcola la distanza totale percorsa dal drone
-            double distanceToPickup = calculateDistance(droneInitialPosition, pickupPosition); //calcola la distanza dalla posizione iniziale del drone al luogo di ritiro
-            double totalDistance = distanceToPickup + calculateDistance(pickupPosition, deliveryPosition); //calcola la distanza totale che il drone deve percorrere
+            double distanceToPickup = GeoUtils.haversine(droneInitialPosition.getLatitude(), droneInitialPosition.getLongitude(), pickupPosition.getLatitude(), pickupPosition.getLongitude()); //calcola la distanza dalla posizione iniziale del drone al luogo di ritiro
+            double totalDistance = distanceToPickup + GeoUtils.haversine(pickupPosition.getLatitude(), pickupPosition.getLongitude(), deliveryPosition.getLatitude(), deliveryPosition.getLongitude()); //calcola la distanza totale che il drone deve percorrere
             if (distanceCovered >= totalDistance) { //se il drone ha raggiunto la destinazione
                 this.status = ShipmentStatus.COMPLETED;
             } else if (distanceCovered >= distanceToPickup) { //se il drone ha raggiunto il logo di ritiro

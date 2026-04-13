@@ -21,18 +21,17 @@ public class DroneAssignmentOrchestratorImpl implements DroneAssignmentOrchestra
     //gestisce l'assegnazione del drone alla spedizione
     @Override
     public Future<Void> orchestrateAssignment(String shipmentId, double pickupLat, double pickupLon, double deliveryLat, double deliveryLon, double weight, int timeLimit) {
-
-        //step 1: assegna il drone
-        double distance = GeoUtils.haversine(pickupLat, pickupLon, deliveryLat, deliveryLon);
-        List<Drone> drones = repository.findAll(); //recupera tutti i droni esistenti
-        Drone assignedDrone = assignDrone.assign(drones, weight, pickupLat, pickupLon, distance, timeLimit); //assegna il drone
-        if (assignedDrone != null) { //se esiste un drone
+        try {
+            //step 1: assegna il drone
+            double distance = GeoUtils.haversine(pickupLat, pickupLon, deliveryLat, deliveryLon);
+            List<Drone> drones = repository.findAll(); //recupera tutti i droni esistenti
+            Drone assignedDrone = assignDrone.assign(drones, weight, pickupLat, pickupLon, distance, timeLimit); //assegna il drone
             repository.updateAvailability(assignedDrone.getId(), false); //imposta il drone come non più disponibile
 
             //step 2: pubblica l'evento
             return notifier.notifyDroneAssigned(shipmentId, assignedDrone, pickupLat, pickupLon, deliveryLat, deliveryLon);
-        } else { //se non esiste un drone
-            return notifier.notifyDroneNotAvailable(shipmentId).compose(v -> Future.failedFuture("NO_DRONE_AVAILABLE"));
+        } catch (DroneNotAvailableException e) { //se non esiste un drone
+            return notifier.notifyDroneNotAvailable(shipmentId).compose(v -> Future.failedFuture(e));
         }
     }
 }

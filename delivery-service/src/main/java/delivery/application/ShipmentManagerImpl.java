@@ -33,6 +33,6 @@ public class ShipmentManagerImpl implements ShipmentManager {
     //recupera le informazioni di una spedizione
     @Override
     public Shipment getShipmentDetails(String id) {
-        return repository.findById(id).orElse(null);
+        return repository.findById(id).orElseThrow(ShipmentNotFoundException::new);
     }
 }

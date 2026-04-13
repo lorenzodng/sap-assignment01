@@ -21,16 +21,16 @@ public class ShipmentRequestOrchestratorImpl implements ShipmentRequestOrchestra
 
     @Override
     public Future<Shipment> orchestrateRequest(String userId, String userName, String userSurname, Double pickupLat, Double pickupLon, Double deliveryLat, Double deliveryLon, String pickupDate, String pickupTime, Integer deliveryTimeLimit, Double weight, Boolean fragile) {
-
-        //step 1: crea la richiesta
-        Shipment shipment = creator.create(userId, userName, userSurname, pickupLat, pickupLon, deliveryLat, deliveryLon, pickupDate, pickupTime, deliveryTimeLimit, weight, fragile);
-        if (shipment != null && validator.validate(shipment)) {
+        try {
+            //step 1: crea la richiesta
+            Shipment shipment = creator.create(userId, userName, userSurname, pickupLat, pickupLon, deliveryLat, deliveryLon, pickupDate, pickupTime, deliveryTimeLimit, weight, fragile);
+            validator.validate(shipment);
             log.info("Shipment {} request created", shipment.getId());
 
             //step 2: verifica il tempo trascorso e notifica drone-service
             return scheduler.schedule(shipment).map(v -> shipment); //trasforma il valore di ritorno in una Future
-        } else {
-            return Future.failedFuture("VALIDATION_FAILED"); //se si verificano errori in fase di creazione o validazione
+        } catch (Exception e) {
+            return Future.failedFuture(e);
         }
     }
 }

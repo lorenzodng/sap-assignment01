@@ -16,7 +16,6 @@ public class Shipment implements AggregateRoot<String> {
     private double deliverySpeed;
     private ShipmentStatus status;
 
-    //costruttore principale
     public Shipment(String id, Position droneInitialPosition, Position pickupPosition, Position deliveryPosition, long assignedAt, double deliverySpeed) {
         this.id = id;
         this.droneInitialPosition = droneInitialPosition;

@@ -3,7 +3,6 @@ package request.application;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import request.domain.Shipment;
-
 import java.time.LocalDateTime;
 
 //verifica se è il tempo di assegnare il drone
@@ -17,7 +16,6 @@ public class ShipmentSchedulerImpl implements ShipmentScheduler {
         this.vertx = vertx;
     }
 
-
     @Override
     public Future<Void> schedule(Shipment shipment) {
         LocalDateTime pickupDateTime = LocalDateTime.of(shipment.getPickupDate(), shipment.getPickupTime());
@@ -26,8 +24,7 @@ public class ShipmentSchedulerImpl implements ShipmentScheduler {
         //se la data/ora è già passata o è adesso, il drone parte
         if (delayMs <= 0) {
             return droneServiceNotifier.notifyShipmentRequest(shipment);
-            //altrimenti attende
-        } else {
+        } else { //altrimenti attende
             vertx.setTimer(delayMs, id -> droneServiceNotifier.notifyShipmentRequest(shipment));
             return Future.succeededFuture();
         }

@@ -302,7 +302,8 @@ This approach allows the system to handle many simultaneous requests efficiently
 
 ##### Execution Model
 
-Each microservice adopts an asynchronous event-loop execution model, using a pool of event-loop threads to handle multiple concurrent requests efficiently. Although interactions appear synchronous from the client perspective, each microservice processes requests in a non-blocking way, delegating I/O operations to the event loop.
+Each microservice adopts an asynchronous event-loop execution model, using a pool of event-loop threads to handle multiple concurrent requests efficiently. 
+Although interactions appear synchronous from the client perspective, each microservice processes requests in a non-blocking way, delegating I/O operations to the event loop.
 
 This model was chosen to satisfy the scalability requirement, allowing each microservice to handle multiple simultaneous deliveries without blocking threads on I/O operations, thus improving throughput and responsiveness under high load.
 

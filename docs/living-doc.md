@@ -1,6 +1,13 @@
 # Shipping on the Air - Living Document
 
-**v1.3.4**
+**v1.4.0**
+
+---
+
+## Overview
+Shipping on the Air is a drone-based delivery service that allows users to send packages from a pickup location to a destination within a range of approximately 40–45 km.  
+Each delivery is performed by autonomous drones, which travel at a constant speed of 50 km/h and are subject to operational constraints such as battery consumption (2% per km) and a minimum safety threshold of 10%.  
+Users can request deliveries by specifying pickup and destination coordinates, along with time constraints, and can track the shipment in real time, including its status, current position and estimated remaining time.
 
 ---
 
@@ -91,11 +98,9 @@ The actors involved are:
 - **Scalability**: the system must handle multiple simultaneous deliveries.
 - **Maintainability**: the system must be modifiable and deployable without changes to one component impacting the others.
 
-### 1.5 Domain Model
+### 1.5 Strategic Design
 
-#### 1.5.1 Strategic Design
-
-##### Ubiquitous Language
+#### 1.5.1 Ubiquitous Language
 
 - **Shipping on the Air**
     - The online system that allows users to request package deliveries through drones.
@@ -148,13 +153,13 @@ The actors involved are:
 - **To track a shipment** *(Action)*
     - Performed by the user to monitor the delivery, including the current status of the shipment, the current position of the drone and the estimated time remaining to complete the delivery.
 
-##### Bounded Contexts
+#### 1.5.2 Bounded Contexts
 
 - **Request**: creates and validates delivery requests.
 - **Drone**: check drones availability and assigns drones.
 - **Shipment**: tracks the status of the shipments, the current positions of drones and the remaining time to complete deliveries.
 
-##### Context Map
+#### 1.5.3 Context Map
 
 ```mermaid
 flowchart LR
@@ -167,7 +172,7 @@ flowchart LR
     DS -->|No drone available| DLS
 ```
 
-##### Domain Events
+#### 1.5.4 Domain Events
 
 - **Request**:
     - `Request created`: published when the user creates a shipment request.
@@ -179,9 +184,11 @@ flowchart LR
 - **Shipment**:
     - No domain events published; only consumes events from other contexts.
 
-#### 1.5.2 Tactical Design
+## 2. Design
 
-##### Request
+### 2.1 Tactical Design
+
+#### Request
 
 - **Entities**:
     - `User`: represents the user that submitted the delivery request.
@@ -196,7 +203,7 @@ flowchart LR
     - Delivery time limit must be greater than 0.
     - Pickup and delivery coordinates must be valid.
 
-##### Drone
+#### Drone
 
 - **Entities**:
     - `Drone`: represents the drone available for deliveries.
@@ -208,7 +215,7 @@ flowchart LR
     - Drone battery must be sufficient to cover the full route.
     - The assigned drone is the one closest to the pickup location.
 
-##### Shipment
+#### Shipment
 
 - **Aggregates**:
     - `Shipment` *(root)*: represents the delivery process, composed of `Position`.
@@ -217,9 +224,7 @@ flowchart LR
 - **Domain Types**:
     - `ShipmentStatus`: represents the possible states of a shipment (`Scheduled`, `In Progress`, `Completed`, `Cancelled`).
 
-## 2. Design
-
-### 2.1 Architecture
+### 2.2 Architecture
 
 #### Architectural Style
 
@@ -262,7 +267,7 @@ flowchart LR
     DS -->|request| DLS
 ```
 
-### 2.2 Functional Requirements Assignment
+### 2.3 Functional Requirements Assignment
 
 - **Request Service**: 
   - The user can request a package delivery.
@@ -276,7 +281,7 @@ flowchart LR
   - The user can track the current position of the drone.
   - The user can know the remaining time to complete the delivery.
 
-### 2.3 Non-Functional Requirements Conformance
+### 2.4 Non-Functional Requirements Conformance
 
 The non-functional requirements are satisfied by the following architectural choices:
 
@@ -285,9 +290,9 @@ The non-functional requirements are satisfied by the following architectural cho
 - **Scalability**: microservices architecture, which allows each service to scale independently.
 - **Maintainability**: clean architecture and microservices style, which allows each service to be modified and deployed independently.
 
-### 2.4 API Design
+### 2.5 API Design
 
-#### 2.4.1 Conceptual Design
+#### 2.5.1 Conceptual Design
 
 ##### Interaction Model
 
@@ -307,7 +312,7 @@ Although interactions appear synchronous from the client perspective, each micro
 
 This model was chosen to satisfy the scalability requirement, allowing each microservice to handle multiple simultaneous deliveries without blocking threads on I/O operations, thus improving throughput and responsiveness under high load.
 
-#### 2.4.2 Technical Design
+#### 2.5.2 Technical Design
 
 - **Interaction**: REST is chosen as the communication protocol between microservices, implemented in a non-blocking way.
 - **Execution**: Vert.x is chosen to implement the asynchronous event-loop execution.

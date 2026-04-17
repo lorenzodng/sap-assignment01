@@ -1,6 +1,6 @@
 # Shipping on the Air - Living Document
 
-**v1.4.0**
+**v1.6.0**
 
 ---
 
@@ -267,32 +267,9 @@ flowchart LR
     DS -->|request| DLS
 ```
 
-### 2.3 Functional Requirements Assignment
+### 2.3 API Design
 
-- **Request Service**: 
-  - The user can request a package delivery.
-
-
-- **Drone Service**: no direct functional requirements.
-
-
-- **Delivery Service**:
-  - The user can know the current status of the shipment.
-  - The user can track the current position of the drone.
-  - The user can know the remaining time to complete the delivery.
-
-### 2.4 Non-Functional Requirements Conformance
-
-The non-functional requirements are satisfied by the following architectural choices:
-
-- **Availability**: independence of microservices — if one service goes down, the others continue to operate.
-- **Performance**: synchronous interaction model, which ensures real-time responses for tracking requests.
-- **Scalability**: microservices architecture, which allows each service to scale independently.
-- **Maintainability**: clean architecture and microservices style, which allows each service to be modified and deployed independently.
-
-### 2.5 API Design
-
-#### 2.5.1 Conceptual Design
+#### 2.3.1 Conceptual Design
 
 ##### Interaction Model
 
@@ -307,12 +284,36 @@ This approach allows the system to handle many simultaneous requests efficiently
 
 ##### Execution Model
 
-Each microservice adopts an asynchronous event-loop execution model, using a pool of event-loop threads to handle multiple concurrent requests efficiently. 
+Each microservice adopts an asynchronous event-loop execution model, using a pool of event-loop threads to handle multiple concurrent requests efficiently.
 Although interactions appear synchronous from the client perspective, each microservice processes requests in a non-blocking way, delegating I/O operations to the event loop.
 
 This model was chosen to satisfy the scalability requirement, allowing each microservice to handle multiple simultaneous deliveries without blocking threads on I/O operations, thus improving throughput and responsiveness under high load.
 
-#### 2.5.2 Technical Design
+#### 2.3.2 Technical Design
 
 - **Interaction**: REST is chosen as the communication protocol between microservices, implemented in a non-blocking way.
 - **Execution**: Vert.x is chosen to implement the asynchronous event-loop execution.
+
+
+### 2.4 Functional Requirements Assignment
+
+- **Request Service**: 
+  - The user can request a package delivery.
+
+
+- **Drone Service**: no direct functional requirements.
+
+
+- **Delivery Service**:
+  - The user can know the current status of the shipment.
+  - The user can track the current position of the drone.
+  - The user can know the remaining time to complete the delivery.
+
+### 2.5 Non-Functional Requirements Conformance
+
+The non-functional requirements are satisfied by the following architectural choices:
+
+- **Availability**: independence of microservices — if one service goes down, the others continue to operate.
+- **Performance**: synchronous interaction model, which ensures real-time responses for tracking requests.
+- **Scalability**: microservices architecture, which allows each service to scale independently.
+- **Maintainability**: clean architecture and microservices style, which allows each service to be modified and deployed independently.

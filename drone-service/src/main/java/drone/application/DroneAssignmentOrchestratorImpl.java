@@ -28,7 +28,7 @@ public class DroneAssignmentOrchestratorImpl implements DroneAssignmentOrchestra
             Drone assignedDrone = assignDrone.assign(drones, weight, pickupLat, pickupLon, distance, timeLimit); //assegna il drone
             repository.updateAvailability(assignedDrone.getId(), false); //imposta il drone come non più disponibile
 
-            //step 2: pubblica l'evento
+            //step 2: notifica delivery-service
             return notifier.notifyDroneAssigned(shipmentId, assignedDrone, pickupLat, pickupLon, deliveryLat, deliveryLon);
         } catch (DroneNotAvailableException e) { //se non esiste un drone
             return notifier.notifyDroneNotAvailable(shipmentId).compose(v -> Future.failedFuture(e));

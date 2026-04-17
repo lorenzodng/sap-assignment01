@@ -314,6 +314,6 @@ This model was chosen to satisfy the scalability requirement, allowing each micr
 The non-functional requirements are satisfied by the following architectural choices:
 
 - **Availability**: independence of microservices — if one service goes down, the others continue to operate.
-- **Performance**: synchronous interaction model, which ensures real-time responses for tracking requests.
-- **Scalability**: microservices architecture, which allows each service to scale independently.
+- **Performance**: non-blocking asynchronous model, which ensures real-time responses for tracking requests without suspending threads.
+- **Scalability**: microservices architecture combined with an event-loop execution model, which allows each service to scale independently and handle multiple concurrent requests efficiently.
 - **Maintainability**: clean architecture and microservices style, which allows each service to be modified and deployed independently.

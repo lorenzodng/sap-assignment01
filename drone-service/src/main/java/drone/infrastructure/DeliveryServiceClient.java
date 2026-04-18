@@ -72,7 +72,7 @@ public class DeliveryServiceClient implements DeliveryServiceNotifier {
         JSONObject body = new JSONObject();
         body.put("assigned", false);
 
-        return client.putAbs(deliveryServiceUrl + "/shipments/" + shipmentId + "/assignment").sendBuffer(Buffer.buffer(body.toString())) //invia il messaggio http trattando il body con un buffer (richiesto da vertx per recuperare i messaggi
+        return client.putAbs(deliveryServiceUrl + "/shipments/" + shipmentId + "/assignment").putHeader("Content-Type", "application/json").sendBuffer(Buffer.buffer(body.toString())) //invia il messaggio http trattando il body con un buffer (richiesto da vertx per recuperare i messaggi
                 .compose(response -> {
                     if (response.statusCode() >= 200 && response.statusCode() < 300) { //gestisce casi errore/indisponibilita di delivery-service
                         return Future.succeededFuture();

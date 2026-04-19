@@ -28,7 +28,6 @@ public class ShipmentAssignmentController {
             String shipmentId = ctx.pathParam("id");
             JSONObject body = new JSONObject(ctx.body().asString());
             boolean assigned = body.getBoolean("assigned");
-
             if (assigned) {
                 log.info("Shipment {} drone assigned received", shipmentId);
                 shipmentManager.createShipmentFromAssignment(shipmentId, true, body.getDouble("droneLatitude"), body.getDouble("droneLongitude"), body.getDouble("pickupLatitude"), body.getDouble("pickupLongitude"), body.getDouble("deliveryLatitude"), body.getDouble("deliveryLongitude"), body.getLong("assignedAt"), body.getDouble("droneSpeed"));

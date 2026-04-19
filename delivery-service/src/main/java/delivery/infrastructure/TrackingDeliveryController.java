@@ -12,36 +12,32 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//traccia la spedizione (stato e posizione del drone) e lo stato della spedizione
 @Adapter
 public class TrackingDeliveryController {
 
     private static final Logger log = LoggerFactory.getLogger(TrackingDeliveryController.class);
-    private final ShipmentManager shipmentManager; //mappa che tiene traccia di tutte le spedizioni attive (la chiave è l'id della spedizione)
+    private final ShipmentManager shipmentManager;
 
     public TrackingDeliveryController(ShipmentManager shipmentManager) {
         this.shipmentManager = shipmentManager;
     }
 
-    //registra le rotte
     public void registerRoutes(Router router) {
         router.get("/shipments/:id/status").handler(this::getShipmentStatus);
         router.get("/shipments/:id/position").handler(this::getDronePosition);
         router.get("/shipments/:id/remaining-time").handler(this::getRemainingTime);
     }
 
-    //recupera lo stato della spedizione
     private void getShipmentStatus(RoutingContext ctx) {
         try {
-            String id = ctx.pathParam("id"); //estrae l'id dall'url del messaggio http
-            Shipment shipment = shipmentManager.getShipmentDetails(id); //recupera la spedizione dalla mappa
+            String id = ctx.pathParam("id");
+            Shipment shipment = shipmentManager.getShipmentDetails(id);
             ShipmentStatus status = shipment.updateStatus();
-
-            //costruisce il messaggio json
-            JSONObject response = new JSONObject();
             log.info("Shipment {} status: {}", id, status.name());
+
+            JSONObject response = new JSONObject();
             response.put("status", status.name());
-            if (status == ShipmentStatus.CANCELLED) { //se lo stato della richiesta è CANCELLED
+            if (status == ShipmentStatus.CANCELLED) {
                 response.put("message", "No drone available for this shipment");
             }
             ctx.response().setStatusCode(200).putHeader("Content-Type", "application/json").end(response.toString());
@@ -52,16 +48,14 @@ public class TrackingDeliveryController {
         }
     }
 
-    //recupera la posizione del drone
     private void getDronePosition(RoutingContext ctx) {
         try {
-            String id = ctx.pathParam("id"); //estrae l'id dall'url del messaggio http
-            Shipment shipment = shipmentManager.getShipmentDetails(id); //recupera la spedizione dalla mappa
+            String id = ctx.pathParam("id");
+            Shipment shipment = shipmentManager.getShipmentDetails(id);
             Position currentPosition = shipment.calculateCurrentDronePosition();
             if (currentPosition != null) {
                 log.info("Delivery {} drone position: {}, {}", id, currentPosition.getLatitude(), currentPosition.getLongitude());
 
-                //costruisce il messaggio json
                 JSONObject response = new JSONObject();
                 response.put("latitude", currentPosition.getLatitude());
                 response.put("longitude", currentPosition.getLongitude());
@@ -76,18 +70,16 @@ public class TrackingDeliveryController {
         }
     }
 
-    //recupera il tempo rimanente alla consegna
     private void getRemainingTime(RoutingContext ctx) {
         try {
-            String id = ctx.pathParam("id"); //estrae l'id dall'url del messaggio http
-            Shipment shipment = shipmentManager.getShipmentDetails(id); //recupera la spedizione dalla mappa
-            double remainingMinutes = shipment.calculateRemainingTime(); //calcola il tempo rimanente
+            String id = ctx.pathParam("id");
+            Shipment shipment = shipmentManager.getShipmentDetails(id);
+            double remainingMinutes = shipment.calculateRemainingTime();
             log.info("Delivery {} remaining time: {} minutes", id, (int) remainingMinutes);
 
-            //costruisce il messaggio json
             JSONObject response = new JSONObject();
             response.put("remainingMinutes", remainingMinutes);
-            ctx.response().setStatusCode(200).putHeader("Content-Type", "application/json").end(response.toString()); //costruisce il messaggio di risposta e lo invia all'api-gateway
+            ctx.response().setStatusCode(200).putHeader("Content-Type", "application/json").end(response.toString());
         } catch (ShipmentNotFoundException e) {
             ctx.response().setStatusCode(404).end(e.getMessage());
         } catch (Exception e) {

@@ -16,34 +16,26 @@ public class RequestServiceMain {
     private static final Logger log = LoggerFactory.getLogger(RequestServiceMain.class);
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure().directory("request-service").load(); //carica le variabili del file .env
-
+        Dotenv dotenv = Dotenv.configure().directory("request-service").load();
         String droneServiceUrl = dotenv.get("DRONE_SERVICE_URL");
         int port = Integer.parseInt(dotenv.get("PORT"));
 
-        //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
-        //crea il producer
         DroneServiceNotifier droneServiceNotifier = new DroneServiceClient(vertx, droneServiceUrl);
 
-        //crea i use case
         CreateShipmentRequest createShipmentRequest = new CreateShipmentRequestImpl();
         ValidateShipmentRequest validateShipmentRequest = new ValidateShipmentRequestImpl();
         ShipmentScheduler shipmentScheduler = new ShipmentSchedulerImpl(droneServiceNotifier, vertx);
 
-        //crea l'orchestratore
         ShipmentRequestOrchestrator orchestrator = new ShipmentRequestOrchestratorImpl(createShipmentRequest, validateShipmentRequest, shipmentScheduler);
 
-        //crea il controller REST
         ShipmentRequestController shipmentController = new ShipmentRequestController(orchestrator);
 
-        //crea il router e registra la rotta
         Router router = Router.router(vertx);
-        router.route().handler(CorsHandler.create().addOrigin("*").allowedMethod(HttpMethod.GET).allowedMethod(HttpMethod.POST).allowedHeader("Content-Type")); //registra un handler per la lettura di richieste provenienti da fonti diverse dal server (ovvero dal frontend)
+        router.route().handler(CorsHandler.create().addOrigin("*").allowedMethod(HttpMethod.GET).allowedMethod(HttpMethod.POST).allowedHeader("Content-Type"));
         shipmentController.registerRoutes(router);
 
-        //avvia il server HTTP
         vertx.createHttpServer().requestHandler(router).listen(port);
 
         log.info("Request service started on port {}", port);

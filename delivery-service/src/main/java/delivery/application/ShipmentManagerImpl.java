@@ -14,10 +14,6 @@ public class ShipmentManagerImpl implements ShipmentManager {
         this.repository = repository;
     }
 
-    /*
-    crea la spedizione scheduled o cancelled
-    sono passati i valori "di base" perchè, essendo il metodo richiamato da ShipmentAssignment al livello infrastructure, non dovrebbe creare elementi di dominio (e quindi Position)
-    */
     @Override
     public void createShipmentFromAssignment(String id, boolean assigned, Double droneLat, Double droneLon, Double pickupLat, Double pickupLon, Double deliveryLat, Double deliveryLon, Long assignedAt, Double speed) {
         Shipment shipment = new Shipment(id, new Position(droneLat, droneLon), new Position(pickupLat, pickupLon), new Position(deliveryLat, deliveryLon), assignedAt, speed);
@@ -30,7 +26,6 @@ public class ShipmentManagerImpl implements ShipmentManager {
         repository.save(shipment);
     }
 
-    //recupera le informazioni di una spedizione
     @Override
     public Shipment getShipmentDetails(String id) {
         return repository.findById(id).orElseThrow(ShipmentNotFoundException::new);

@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import request.application.DroneServiceNotifier;
 import request.domain.Shipment;
 
-//client che notifica la creazione della richiesta di spedizione verso drone-service
 @Adapter
 public class DroneServiceClient implements DroneServiceNotifier {
 
@@ -24,11 +23,6 @@ public class DroneServiceClient implements DroneServiceNotifier {
         this.droneServiceUrl = droneServiceUrl;
     }
 
-    /*
-    1) l'utente invoca l'api-gateway che contatta request-service (in ShipmentRequestController)
-    2) request-service aspetta la risposta di stato da drone-service per sapere cosa rispondere all'utente (con "createShipment" in ShipmentRequestController)
-    3) request-service mostra il messaggio all'utente
-     */
     @Override
     public Future<Void> notifyShipmentRequest(Shipment shipment) {
         JSONObject body = new JSONObject();
@@ -41,7 +35,7 @@ public class DroneServiceClient implements DroneServiceNotifier {
         body.put("deliveryTimeLimit", shipment.getDeliveryTimeLimit());
 
         return client.postAbs(droneServiceUrl + "/shipments/assign").putHeader("Content-Type", "application/json").sendBuffer(Buffer.buffer(body.toString()))
-                .compose(response -> { //gestisce casi errore/indisponibilita di drone-service
+                .compose(response -> {
                     if (response.statusCode() >= 200 && response.statusCode() < 300) {
                         return Future.succeededFuture();
                     } else {
@@ -50,6 +44,6 @@ public class DroneServiceClient implements DroneServiceNotifier {
                 })
                 .onSuccess(res -> log.info("Shipment {} request notified", shipment.getId()))
                 .onFailure(err -> log.error("Failed to notify drone service for shipment {}", shipment.getId(), err))
-                .mapEmpty(); //trasforma il risultato in Future<Void>
+                .mapEmpty();
     }
 }

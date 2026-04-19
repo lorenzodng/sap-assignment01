@@ -19,29 +19,23 @@ public class DeliveryServiceMain {
     private static final Logger log = LoggerFactory.getLogger(DeliveryServiceMain.class);
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure().directory("delivery-service").load(); //carica le variabili del file .env
+        Dotenv dotenv = Dotenv.configure().directory("delivery-service").load();
         int port = Integer.parseInt(dotenv.get("PORT"));
 
-        //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
-        //crea il repository
         ShipmentRepository repository = new InMemoryShipmentRepository();
 
-        //crea il manager
         ShipmentManager shipmentManager = new ShipmentManagerImpl(repository);
 
-        //crea i controller
         ShipmentAssignmentController assignmentController = new ShipmentAssignmentController(shipmentManager);
         TrackingDeliveryController trackingController = new TrackingDeliveryController(shipmentManager);
 
-        //crea il router e registra le rotte
         Router router = Router.router(vertx);
-        router.route().handler(CorsHandler.create().addOrigin("*").allowedMethod(HttpMethod.GET).allowedMethod(HttpMethod.POST).allowedHeader("Content-Type")); //registra un handler per la lettura di richieste provenienti da fonti diverse dal server (ovvero dal frontend)
+        router.route().handler(CorsHandler.create().addOrigin("*").allowedMethod(HttpMethod.GET).allowedMethod(HttpMethod.POST).allowedHeader("Content-Type"));
         assignmentController.registerRoutes(router);
         trackingController.registerRoutes(router);
 
-        //avvia il server HTTP
         vertx.createHttpServer().requestHandler(router).listen(port);
 
         log.info("Delivery service started on port {}", port);

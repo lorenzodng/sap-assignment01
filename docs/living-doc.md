@@ -99,59 +99,67 @@ The actors involved are:
 - **Maintainability**: the system must be modifiable and deployable without changes to one component impacting the others.
 
 ### 1.5 Strategic Design
-
 #### 1.5.1 Ubiquitous Language
 
-- **Shipping on the Air**
-    - The online system that allows users to request package deliveries through drones.
-    - It provides functionalities to request a delivery, track the package in real time and monitor the delivery status.
-
+##### Shared Concepts
 
 - **User**
-    - The actor that accesses the system to request and track package deliveries.
+  - The actor that accesses the system to request and track package deliveries.
 
 
 - **Package**
-    - The physical item to be delivered from a pickup location to a delivery location.
-
-
-- **Drone**
-    - The autonomous vehicle used to deliver packages.
-
-
-- **Delivery Request**
-    - The request submitted by a user to deliver a package from a pickup location to a delivery location.
-    - It specifies a pickup date/time and a maximum delivery time limit.
-
-
-- **Shipment**
-    - The actual delivery process associated to a delivery request, once a drone has been assigned.
-    - It tracks the current status and position of the delivery.
-
-
-- **Status**
-    - The current state of a shipment, which can be:
-        - `Scheduled`: a drone has been assigned to the shipment.
-        - `In Progress`: the drone has reached the pickup location and is flying towards the delivery location.
-        - `Completed`: the drone has reached the delivery location.
-        - `Cancelled`: no drone is available for the shipment.
+  - The physical item to be delivered from a pickup location to a delivery location.
 
 
 - **Position**
-    - A geographic location expressed as latitude and longitude.
-    - Used to represent the pickup location, delivery location and current drone position.
+  - A geographic location expressed as latitude and longitude.
+  - Used to represent the pickup location, delivery location and current drone position.
+
+---
+
+##### Request
+
+- **Shipment**
+  - The aggregation of all the information related to a delivery request.
 
 
 - **To request a delivery** *(Action)*
-    - Performed by the user to submit a new delivery request, specifying pickup location, delivery location, pickup date/time and time limit.
+  - Performed by the user to submit a new delivery request, specifying pickup location, delivery location, pickup date/time and time limit.
+
+---
+
+##### Drone
+
+- **Drone**
+  - The autonomous vehicle used to deliver packages.
+
+
+- **Assignment**
+  - The task assigned to a drone to fulfill a delivery request.
 
 
 - **To assign a drone** *(Action)*
-    - Performed by the system to select and assign the most suitable available drone to a delivery request.
+  - Performed by the system to select and assign the most suitable available drone to a delivery request.
+
+---
+
+##### Shipment
+
+- **Shipment**
+  - The actual delivery process associated to a delivery request, once a drone has been assigned.
+  - It tracks the current status, the current position and the remaining time of the delivery.
+
+
+- **Status**
+  - The current state of a shipment, which can be:
+    - `Scheduled`: a drone has been assigned to the shipment.
+    - `In Progress`: the drone has reached the pickup location and is flying towards the delivery location.
+    - `Completed`: the drone has reached the delivery location.
+    - `Cancelled`: no drone is available for the shipment.
 
 
 - **To track a shipment** *(Action)*
-    - Performed by the user to monitor the delivery, including the current status of the shipment, the current position of the drone and the estimated time remaining to complete the delivery.
+  - Performed by the user to monitor the delivery, including the current status of the shipment, the current position of the drone and the estimated time remaining to complete the delivery.
 
 #### 1.5.2 Bounded Contexts
 
